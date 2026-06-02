@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SIG Maths">
+<title>SIG Mental Maths</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --text2: #888;
+    --text3: #555;
+    --amber: #f5a623;
+    --green: #00d084;
+    --red: #ff4757;
+    --blue: #4ecdc4;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+
+  #app {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+  }
+  .screen.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ── MENU ── */
+  .menu-header {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+  }
+  .menu-logo {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--amber);
+  }
+  .menu-logo span { color: var(--text3); font-weight: 300; }
+  .menu-subtitle {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding-bottom: 2px;
+  }
+
+  .diff-bar {
+    display: flex;
+    gap: 6px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .diff-btn {
+    flex: 1;
+    padding: 9px 0;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .diff-btn.active {
+    border-color: var(--amber);
+    color: var(--amber);
+    background: rgba(245,166,35,0.08);
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    color: var(--text3);
+    text-transform: uppercase;
+    padding: 16px 20px 8px;
+  }
+
+  .mode-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 0 14px;
+  }
+
+  .mode-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+  .mode-card:active { transform: scale(0.98); }
+  .mode-card:hover { border-color: #3a3a3a; background: var(--surface2); }
+  .mode-card.mixed {
+    border-color: rgba(245,166,35,0.3);
+    background: rgba(245,166,35,0.04);
+    margin-top: 4px;
+  }
+
+  .mode-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    min-width: 18px;
+  }
+  .mode-icon {
+    font-size: 20px;
+    min-width: 28px;
+    text-align: center;
+  }
+  .mode-info { flex: 1 }
+  .mode-name {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .mode-desc {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+  .mode-tier {
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 3px 7px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+  .tier1 { background: rgba(245,166,35,0.15); color: var(--amber); }
+  .tier2 { background: rgba(78,205,196,0.12); color: var(--blue); }
+
+  .stats-bar {
+    margin: 14px 14px 0;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .stats-bar-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .stat-item { text-align: center; }
+  .stat-val {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--amber);
+    line-height: 1;
+  }
+  .stat-lbl {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    margin-top: 3px;
+    letter-spacing: 0.5px;
+  }
+
+  .weak-section {
+    margin: 10px 14px 20px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,71,87,0.2);
+    background: rgba(255,71,87,0.04);
+  }
+  .weak-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--red);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .weak-rows { display: flex; flex-direction: column; gap: 5px; }
+  .weak-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .weak-name {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    min-width: 110px;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .weak-bar-bg {
+    flex: 2;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .weak-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--green);
+    transition: width 0.5s ease;
+  }
+  .weak-pct {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    min-width: 30px;
+    text-align: right;
+  }
+
+  /* ── MIXED SELECT ── */
+  .mixed-header {
+    padding: 20px 20px 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .back-btn {
+    background: none;
+    border: none;
+    color: var(--text2);
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px;
+    line-height: 1;
+  }
+  .mixed-title {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .mixed-list {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+  }
+  .mixed-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .mixed-item.selected {
+    border-color: var(--amber);
+    background: rgba(245,166,35,0.06);
+  }
+  .mixed-item.selected .mixed-check { color: var(--amber); }
+  .mixed-check {
+    font-size: 18px;
+    color: var(--border);
+    transition: color 0.15s;
+  }
+  .mixed-start-wrap {
+    padding: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .big-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 10px;
+    border: none;
+    background: var(--amber);
+    color: #000;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .big-btn:active { transform: scale(0.98); opacity: 0.9; }
+  .big-btn:disabled { opacity: 0.35; pointer-events: none; }
+  .big-btn.secondary {
+    background: transparent;
+    border: 1.5px solid var(--border);
+    color: var(--text2);
+  }
+
+  /* ── GAME ── */
+  .game-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border);
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .game-back {
+    background: none;
+    border: none;
+    color: var(--text3);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 6px;
+    line-height: 1;
+  }
+  .timer-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .timer-num {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+    transition: color 0.3s;
+  }
+  .timer-num.urgent { color: var(--red); }
+  .timer-bar-bg {
+    width: 100%;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  .timer-bar-fill {
+    height: 100%;
+    background: var(--amber);
+    border-radius: 2px;
+    transition: width 1s linear, background 0.3s;
+  }
+  .timer-bar-fill.urgent { background: var(--red); }
+  .score-wrap {
+    text-align: right;
+    min-width: 60px;
+  }
+  .score-num {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--green);
+    line-height: 1;
+  }
+  .score-sub {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 1px;
+  }
+
+  .game-mode-tag {
+    text-align: center;
+    padding: 7px 16px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .question-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 20px 16px;
+  }
+  .question-text {
+    font-family: var(--mono);
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+    line-height: 1.25;
+    letter-spacing: -0.5px;
+  }
+  .question-sub {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text3);
+    text-align: center;
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  .answer-area {
+    padding: 0 16px 12px;
+    flex-shrink: 0;
+  }
+  .answer-input-wrap {
+    position: relative;
+    margin-bottom: 10px;
+  }
+  .answer-input {
+    width: 100%;
+    padding: 18px 20px;
+    background: var(--surface);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 600;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  .answer-input:focus { border-color: var(--amber); }
+  .answer-input.correct { border-color: var(--green); background: rgba(0,208,132,0.05); }
+  .answer-input.wrong { border-color: var(--red); background: rgba(255,71,87,0.05); }
+
+  .feedback-row {
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+  .feedback-text {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: color 0.2s;
+  }
+  .feedback-text.correct { color: var(--green); }
+  .feedback-text.wrong { color: var(--red); }
+
+  .btn-row {
+    display: flex;
+    gap: 8px;
+  }
+  .show-btn {
+    flex: 1;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .show-btn:active { opacity: 0.7; }
+
+  .q-counter {
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    padding: 6px 0 14px;
+    letter-spacing: 1px;
+  }
+
+  /* ── RESULTS ── */
+  .results-screen {
+    padding: 24px 20px;
+    flex: 1;
+    overflow-y: auto;
+  }
+  .results-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .results-score {
+    font-family: var(--mono);
+    font-size: 52px;
+    font-weight: 700;
+    color: var(--amber);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .results-score span {
+    font-size: 20px;
+    color: var(--text3);
+    font-weight: 400;
+  }
+  .results-meta {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text2);
+    margin-bottom: 28px;
+  }
+  .results-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .result-stat {
+    padding: 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .result-stat-val {
+    font-family: var(--mono);
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1;
+  }
+  .result-stat-lbl {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+  }
+  .results-breakdown {
+    margin-bottom: 24px;
+  }
+  .results-breakdown-title {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    color: var(--text3);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .breakdown-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .breakdown-name {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text2);
+    min-width: 120px;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .breakdown-bar-bg {
+    flex: 2;
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .breakdown-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+  }
+  .breakdown-pct {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    min-width: 36px;
+    text-align: right;
+  }
+
+  .results-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 24px;
+  }
+
+  /* Numpad */
+  .numpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    padding: 0 16px 10px;
+    flex-shrink: 0;
+  }
+  .np-btn {
+    padding: 16px 0;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.1s;
+    user-select: none;
+  }
+  .np-btn:active {
+    transform: scale(0.94);
+    background: var(--surface2);
+    border-color: var(--amber);
+  }
+  .np-btn.special {
+    color: var(--text2);
+    font-size: 18px;
+  }
+  .np-btn.submit-np {
+    background: var(--amber);
+    border-color: var(--amber);
+    color: #000;
+    font-weight: 700;
+  }
+
+  /* Animations */
+  @keyframes flash-green {
+    0%,100% { background: var(--surface); }
+    40% { background: rgba(0,208,132,0.15); }
+  }
+  @keyframes flash-red {
+    0%,100% { background: var(--surface); }
+    40% { background: rgba(255,71,87,0.1); }
+  }
+  .flash-correct { animation: flash-green 0.4s ease; }
+  .flash-wrong { animation: flash-red 0.35s ease; }
+
+  @keyframes pop-in {
+    0% { transform: scale(0.85); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .pop { animation: pop-in 0.2s cubic-bezier(.34,1.56,.64,1); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════ MENU SCREEN ══════════ -->
+  <div class="screen active" id="screen-menu">
+    <div class="menu-header">
+      <div>
+        <div class="menu-logo">SIG<span>/</span>MATHS</div>
+        <div class="menu-subtitle">Trading Prep · Mental Arithmetic</div>
+      </div>
+    </div>
+
+    <div class="diff-bar">
+      <button class="diff-btn active" data-diff="easy" onclick="setDiff(this,'easy')">EASY</button>
+      <button class="diff-btn" data-diff="medium" onclick="setDiff(this,'medium')">MEDIUM</button>
+      <button class="diff-btn" data-diff="hard" onclick="setDiff(this,'hard')">HARD</button>
+    </div>
+
+    <div class="section-label">DRILL MODES</div>
+    <div class="mode-grid" id="mode-grid"></div>
+
+    <div id="stats-section" style="display:none">
+      <div class="section-label">SESSION STATS</div>
+      <div class="stats-bar">
+        <div class="stats-bar-label">ALL TIME</div>
+        <div class="stats-grid">
+          <div class="stat-item"><div class="stat-val" id="stat-total">0</div><div class="stat-lbl">ANSWERED</div></div>
+          <div class="stat-item"><div class="stat-val" id="stat-acc">—</div><div class="stat-lbl">ACCURACY</div></div>
+          <div class="stat-item"><div class="stat-val" id="stat-avg">—</div><div class="stat-lbl">AVG TIME</div></div>
+        </div>
+      </div>
+      <div class="weak-section" id="weak-section">
+        <div class="weak-label">⚠ WEAKEST CATEGORIES</div>
+        <div class="weak-rows" id="weak-rows"></div>
+      </div>
+    </div>
+    <div style="height:24px"></div>
+  </div>
+
+  <!-- ══════════ MIXED SELECT SCREEN ══════════ -->
+  <div class="screen" id="screen-mixed">
+    <div class="mixed-header">
+      <button class="back-btn" onclick="showScreen('menu')">←</button>
+      <div class="mixed-title">MIXED MODE</div>
+    </div>
+    <div class="section-label" style="padding-top:10px">SELECT CATEGORIES</div>
+    <div class="mixed-list" id="mixed-list"></div>
+    <div class="mixed-start-wrap">
+      <button class="big-btn" id="mixed-start-btn" onclick="startMixedGame()" disabled>START MIXED GAME</button>
+    </div>
+  </div>
+
+  <!-- ══════════ GAME SCREEN ══════════ -->
+  <div class="screen" id="screen-game">
+    <div class="game-topbar">
+      <button class="game-back" onclick="confirmBack()">←</button>
+      <div class="timer-wrap">
+        <div class="timer-num" id="timer-num">2:00</div>
+        <div class="timer-bar-bg"><div class="timer-bar-fill" id="timer-bar" style="width:100%"></div></div>
+      </div>
+      <div class="score-wrap">
+        <div class="score-num" id="score-num">0</div>
+        <div class="score-sub">CORRECT</div>
+      </div>
+    </div>
+    <div class="game-mode-tag" id="game-mode-tag">FRACTION → %</div>
+    <div class="question-area">
+      <div class="question-text" id="question-text">?</div>
+      <div class="question-sub" id="question-sub"></div>
+    </div>
+    <div class="answer-area">
+      <div class="answer-input-wrap">
+        <input class="answer-input" id="answer-input" type="text" inputmode="decimal"
+          placeholder="?" autocomplete="off" autocorrect="off"
+          onkeydown="handleKey(event)" oninput="handleInput()">
+      </div>
+      <div class="feedback-row"><div class="feedback-text" id="feedback-text"></div></div>
+      <div class="btn-row">
+        <button class="show-btn" onclick="showAnswer()">SHOW ANSWER</button>
+        <button class="show-btn" onclick="nextQuestion()" id="next-btn" style="display:none">NEXT →</button>
+      </div>
+    </div>
+    <div class="numpad" id="numpad">
+      <button class="np-btn" onclick="np('7')">7</button>
+      <button class="np-btn" onclick="np('8')">8</button>
+      <button class="np-btn" onclick="np('9')">9</button>
+      <button class="np-btn" onclick="np('4')">4</button>
+      <button class="np-btn" onclick="np('5')">5</button>
+      <button class="np-btn" onclick="np('6')">6</button>
+      <button class="np-btn" onclick="np('1')">1</button>
+      <button class="np-btn" onclick="np('2')">2</button>
+      <button class="np-btn" onclick="np('3')">3</button>
+      <button class="np-btn special" id="np-dot-btn" onclick="np('.')">.</button>
+      <button class="np-btn" onclick="np('0')">0</button>
+      <button class="np-btn special" onclick="npDel()">⌫</button>
+    </div>
+    <div class="q-counter" id="q-counter">Q1</div>
+  </div>
+
+  <!-- ══════════ RESULTS SCREEN ══════════ -->
+  <div class="screen" id="screen-results">
+    <div class="results-screen">
+      <div class="results-title">ROUND COMPLETE</div>
+      <div class="results-score" id="res-score">0 <span>correct</span></div>
+      <div class="results-meta" id="res-meta"></div>
+      <div class="results-stats">
+        <div class="result-stat">
+          <div class="result-stat-val" id="res-acc">—</div>
+          <div class="result-stat-lbl">ACCURACY</div>
+        </div>
+        <div class="result-stat">
+          <div class="result-stat-val" id="res-avg">—</div>
+          <div class="result-stat-lbl">AVG TIME</div>
+        </div>
+        <div class="result-stat">
+          <div class="result-stat-val" id="res-skipped">0</div>
+          <div class="result-stat-lbl">SKIPPED</div>
+        </div>
+        <div class="result-stat">
+          <div class="result-stat-val" id="res-best">—</div>
+          <div class="result-stat-lbl">BEST TIME</div>
+        </div>
+      </div>
+      <div class="results-breakdown" id="res-breakdown"></div>
+      <div class="results-btns">
+        <button class="big-btn" onclick="playAgain()">PLAY AGAIN</button>
+        <button class="big-btn secondary" onclick="showScreen('menu')">MENU</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════════
+let difficulty = 'easy';
+let currentMode = null; // string or array
+let currentQ = null;
+let gameActive = false;
+let timerInterval = null;
+let timeLeft = 120;
+let score = 0;
+let questionsAsked = 0;
+let skipped = 0;
+let responseTimes = [];
+let questionStartTime = 0;
+let answered = false;
+let shownAnswer = false;
+let lastGameMode = null;
+let lastGameModes = null;
+
+// Persistent stats
+let allStats = JSON.parse(localStorage.getItem('sig_stats') || '{"total":0,"correct":0,"totalTime":0,"byMode":{}}');
+
+const MODE_NAMES = [
+  'Fraction → %',
+  '% → Fraction',
+  'Decimal Multiplication',
+  'Percentage Arithmetic',
+  'Ratio / Break-Even',
+  'Expected Value',
+  'Weighted Averages',
+  'Weird Division'
+];
+const MODE_ICONS = ['½','↩','×','%','⚖','EV','∑','÷'];
+const MODE_DESCS = [
+  '1/8 → 12.5%',
+  '62.5% → 5/8',
+  '1.07 × 250',
+  '15% of 240',
+  'Risk 40 win 60',
+  '60%×10 − 40%×5',
+  '80%×100 + 20%×50',
+  '630 ÷ 8'
+];
+const MODE_TIERS = ['tier1','tier1','tier2','tier2','tier1','tier1','tier1','tier2'];
+
+// ══════════════════════════════════════════════════════════════
+//  BUILD MENU
+// ══════════════════════════════════════════════════════════════
+function buildMenu() {
+  const grid = document.getElementById('mode-grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    const t = MODE_TIERS[i] === 'tier1' ? '<span class="mode-tier tier1">T1</span>' : '<span class="mode-tier tier2">T2</span>';
+    grid.innerHTML += `
+      <div class="mode-card" onclick="startGame(${i})">
+        <div class="mode-num">${i+1}</div>
+        <div class="mode-icon">${MODE_ICONS[i]}</div>
+        <div class="mode-info">
+          <div class="mode-name">${MODE_NAMES[i]}</div>
+          <div class="mode-desc">${MODE_DESCS[i]}</div>
+        </div>
+        ${t}
+      </div>`;
+  }
+  grid.innerHTML += `
+    <div class="mode-card mixed" onclick="showScreen('mixed')">
+      <div class="mode-num">M</div>
+      <div class="mode-icon">⚡</div>
+      <div class="mode-info">
+        <div class="mode-name">Mixed Mode</div>
+        <div class="mode-desc">Choose your categories</div>
+      </div>
+      <span class="mode-tier tier1" style="background:rgba(245,166,35,0.18)">MIX</span>
+    </div>`;
+}
+
+function buildMixed() {
+  const list = document.getElementById('mixed-list');
+  list.innerHTML = '';
+  for (let i = 0; i < 8; i++) {
+    list.innerHTML += `
+      <div class="mixed-item selected" id="mix-item-${i}" onclick="toggleMix(${i})">
+        <div class="mixed-check" id="mix-chk-${i}">✓</div>
+        <div class="mode-icon">${MODE_ICONS[i]}</div>
+        <div class="mode-info">
+          <div class="mode-name">${MODE_NAMES[i]}</div>
+          <div class="mode-desc">${MODE_DESCS[i]}</div>
+        </div>
+      </div>`;
+  }
+  updateMixedBtn();
+}
+
+let mixSelected = [0,1,2,3,4,5,6,7];
+
+function toggleMix(i) {
+  const idx = mixSelected.indexOf(i);
+  if (idx > -1) {
+    mixSelected.splice(idx, 1);
+    document.getElementById('mix-item-'+i).classList.remove('selected');
+    document.getElementById('mix-chk-'+i).textContent = '○';
+  } else {
+    mixSelected.push(i);
+    document.getElementById('mix-item-'+i).classList.add('selected');
+    document.getElementById('mix-chk-'+i).textContent = '✓';
+  }
+  updateMixedBtn();
+}
+
+function updateMixedBtn() {
+  const btn = document.getElementById('mixed-start-btn');
+  btn.disabled = mixSelected.length === 0;
+  btn.textContent = mixSelected.length > 0
+    ? `START MIXED (${mixSelected.length} MODES)`
+    : 'SELECT AT LEAST ONE';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  QUESTION GENERATORS
+// ══════════════════════════════════════════════════════════════
+function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function rInt(a,b) { return Math.floor(Math.random()*(b-a+1))+a; }
+function rItem(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+// ── MODE 0: Fraction → Percentage ──
+const FRACTIONS_EASY = [
+  [1,2],[1,4],[3,4],[1,5],[2,5],[3,5],[4,5],[1,8],[3,8],[5,8],[7,8],
+  [1,10],[3,10],[7,10],[9,10],[1,3],[2,3],[1,6],[5,6]
+];
+const FRACTIONS_MEDIUM = [
+  [1,16],[3,16],[5,16],[7,16],[9,16],[11,16],[13,16],[15,16],
+  [1,12],[5,12],[7,12],[11,12],[1,9],[2,9],[4,9],[5,9],[7,9],[8,9],
+  [1,7],[2,7],[3,7],[4,7],[5,7],[6,7],[3,20],[7,20],[11,20],[13,20],[17,20],[19,20]
+];
+const FRACTIONS_HARD = [
+  [1,24],[5,24],[7,24],[11,24],[13,24],[17,24],[19,24],[23,24],
+  [3,32],[5,32],[7,32],[9,32],[15,32],[17,32],[21,32],[25,32],
+  [1,15],[2,15],[4,15],[7,15],[8,15],[11,15],[13,15],[14,15],
+  [2,11],[3,11],[5,11],[7,11],[9,11],[3,14],[5,14],[9,14]
+];
+
+function genFraction() {
+  let pool;
+  if (difficulty === 'easy') pool = FRACTIONS_EASY;
+  else if (difficulty === 'medium') pool = [...FRACTIONS_EASY, ...FRACTIONS_MEDIUM];
+  else pool = [...FRACTIONS_MEDIUM, ...FRACTIONS_HARD];
+  const [n,d] = rItem(pool);
+  const pct = (n/d)*100;
+  const ans = roundTo1(pct);
+  return {
+    question: `${n} / ${d}`,
+    sub: 'Express as a percentage',
+    answer: ans,
+    unit: '%',
+    display: `${ans}%`
+  };
+}
+
+// ── MODE 1: % → Fraction ──
+// Each entry: [numerator, denominator, display string]
+const PCT_TO_FRAC_EASY = [
+  [1,2,'1/2'],[1,4,'1/4'],[3,4,'3/4'],[1,5,'1/5'],[2,5,'2/5'],[3,5,'3/5'],[4,5,'4/5'],
+  [1,8,'1/8'],[3,8,'3/8'],[5,8,'5/8'],[7,8,'7/8'],
+  [1,10,'1/10'],[3,10,'3/10'],[7,10,'7/10'],[9,10,'9/10'],
+  [1,3,'1/3'],[2,3,'2/3'],[1,6,'1/6'],[5,6,'5/6']
+];
+const PCT_TO_FRAC_MEDIUM = [
+  [1,16,'1/16'],[3,16,'3/16'],[5,16,'5/16'],[7,16,'7/16'],
+  [9,16,'9/16'],[11,16,'11/16'],[13,16,'13/16'],[15,16,'15/16'],
+  [1,12,'1/12'],[5,12,'5/12'],[7,12,'7/12'],[11,12,'11/12'],
+  [1,9,'1/9'],[2,9,'2/9'],[4,9,'4/9'],[5,9,'5/9'],[7,9,'7/9'],[8,9,'8/9'],
+  [3,20,'3/20'],[7,20,'7/20'],[11,20,'11/20'],[13,20,'13/20'],[17,20,'17/20'],[19,20,'19/20']
+];
+const PCT_TO_FRAC_HARD = [
+  [1,7,'1/7'],[2,7,'2/7'],[3,7,'3/7'],[4,7,'4/7'],[5,7,'5/7'],[6,7,'6/7'],
+  [1,11,'1/11'],[2,11,'2/11'],[3,11,'3/11'],[5,11,'5/11'],[7,11,'7/11'],[9,11,'9/11'],
+  [1,15,'1/15'],[2,15,'2/15'],[4,15,'4/15'],[7,15,'7/15'],[8,15,'8/15'],[11,15,'11/15'],[13,15,'13/15'],[14,15,'14/15'],
+  [3,32,'3/32'],[5,32,'5/32'],[7,32,'7/32'],[9,32,'9/32'],[15,32,'15/32'],[17,32,'17/32']
+];
+
+// For % → Fraction we show the percentage and the user types n/d
+// We accept the answer as a decimal (n/d) since typing fractions is hard on mobile
+// Instead: show the % and ask user to type the simplified fraction numerator,
+// then show denominator as hint — actually cleanest UX: show % ask for fraction as "n/d"
+// We'll accept both "n/d" string format AND the decimal equivalent
+function genPctToFrac() {
+  let pool;
+  if (difficulty === 'easy') pool = PCT_TO_FRAC_EASY;
+  else if (difficulty === 'medium') pool = [...PCT_TO_FRAC_EASY, ...PCT_TO_FRAC_MEDIUM];
+  else pool = [...PCT_TO_FRAC_MEDIUM, ...PCT_TO_FRAC_HARD];
+  const [n, d, disp] = rItem(pool);
+  const pct = roundTo1((n / d) * 100);
+  return {
+    question: `${pct}%`,
+    sub: 'Express as a fraction (e.g. 3/8)',
+    answer: n / d,           // numeric check via decimal
+    answerFrac: [n, d],
+    display: disp,
+    isFrac: true
+  };
+}
+
+// ── MODE 2: Decimal Multiplication ──
+const BASE_NUMS_EASY = [10,20,25,40,50,80,100,120,150,200,250,400,500];
+const BASE_NUMS_MED = [15,24,32,45,60,75,90,110,125,160,175,225,300,350,450,600];
+const BASE_NUMS_HARD = [12,18,36,42,48,56,64,72,84,96,112,132,144,168,192,216,240,288,360,420,480,540,720];
+const MULTS_EASY = [1.1,1.2,1.25,1.5,0.5,0.75,0.8,0.9,2.0,0.25];
+const MULTS_MED = [1.05,1.07,1.08,1.12,1.15,1.18,1.3,1.4,0.85,0.9,0.92,0.93,0.95,1.6,1.75,2.5];
+const MULTS_HARD = [1.03,1.04,1.06,1.09,1.11,1.13,1.16,1.17,1.19,1.21,1.22,0.83,0.87,0.88,0.78,0.82,1.35,1.45,1.55,1.65,1.85,2.2,2.4,2.8,3.5,4.5];
+
+function genDecMult() {
+  let bases, mults;
+  if (difficulty === 'easy') { bases = BASE_NUMS_EASY; mults = MULTS_EASY; }
+  else if (difficulty === 'medium') { bases = [...BASE_NUMS_EASY,...BASE_NUMS_MED]; mults = [...MULTS_EASY,...MULTS_MED]; }
+  else { bases = [...BASE_NUMS_MED,...BASE_NUMS_HARD]; mults = [...MULTS_MED,...MULTS_HARD]; }
+  const b = rItem(bases);
+  const m = rItem(mults);
+  const ans = roundTo1(b * m);
+  return {
+    question: `${m} × ${b}`,
+    sub: '',
+    answer: ans,
+    display: `${ans}`
+  };
+}
+
+// ── MODE 3: Percentage Arithmetic ──
+const PCT_BASES_EASY = [20,25,40,50,60,80,100,120,150,200,250];
+const PCT_BASES_MED = [15,24,36,45,75,90,110,125,160,180,220,300];
+const PCT_BASES_HARD = [12,18,32,42,56,64,72,84,96,112,132,144,168,192,240,288,360];
+const PCT_VALS_EASY = [5,10,15,20,25,50,75];
+const PCT_VALS_MED = [7,8,12,18,30,35,40,45,60,65,70];
+const PCT_VALS_HARD = [3,4,6,9,11,13,14,16,17,19,22,23,27,28,33,37,42,47,55,62,67,72,77,83,88,92,97];
+
+function genPctArith() {
+  let bases, pcts;
+  if (difficulty === 'easy') { bases = PCT_BASES_EASY; pcts = PCT_VALS_EASY; }
+  else if (difficulty === 'medium') { bases = [...PCT_BASES_EASY,...PCT_BASES_MED]; pcts = [...PCT_VALS_EASY,...PCT_VALS_MED]; }
+  else { bases = [...PCT_BASES_MED,...PCT_BASES_HARD]; pcts = [...PCT_VALS_EASY,...PCT_VALS_MED,...PCT_VALS_HARD]; }
+  const b = rItem(bases);
+  const p = rItem(pcts);
+  const type = rItem(['of','increase','decrease']);
+  let q, ans;
+  if (type === 'of') {
+    ans = roundTo1(b * p / 100);
+    q = `${p}% of ${b}`;
+  } else if (type === 'increase') {
+    ans = roundTo1(b * (1 + p/100));
+    q = `${b} + ${p}%`;
+  } else {
+    ans = roundTo1(b * (1 - p/100));
+    q = `${b} − ${p}%`;
+  }
+  return { question: q, sub: '', answer: ans, display: `${ans}` };
+}
+
+// ── MODE 4: Ratio / Break-even ──
+const RISK_EASY = [[30,70],[40,60],[25,75],[50,50],[20,80],[60,90],[50,100]];
+const RISK_MED = [[35,65],[45,90],[30,45],[40,100],[60,80],[75,125],[80,120],[45,55],[30,60],[100,150]];
+const RISK_HARD = [[35,55],[42,63],[18,30],[55,88],[70,105],[45,72],[80,136],[100,180],[65,117],[90,150],[28,45],[55,110],[75,100],[120,168],[85,119]];
+
+function genRatio() {
+  let pool;
+  if (difficulty === 'easy') pool = RISK_EASY;
+  else if (difficulty === 'medium') pool = [...RISK_EASY,...RISK_MED];
+  else pool = [...RISK_MED,...RISK_HARD];
+  const [risk, win] = rItem(pool);
+  const breakEven = (risk / (risk + win)) * 100;
+  const ans = roundTo1(breakEven);
+  return {
+    question: `Risk ${risk}, Win ${win}`,
+    sub: 'Break-even probability (%)',
+    answer: ans,
+    unit: '%',
+    display: `${ans}%`
+  };
+}
+
+// ── MODE 5: Expected Value ──
+const EV_EASY = [
+  {p1:60,p2:40,v1:10,v2:5},{p1:70,p2:30,v1:20,v2:10},{p1:50,p2:50,v1:15,v2:5},
+  {p1:80,p2:20,v1:10,v2:20},{p1:60,p2:40,v1:30,v2:15},{p1:75,p2:25,v1:12,v2:8}
+];
+const EV_MED = [
+  {p1:65,p2:35,v1:18,v2:8},{p1:55,p2:45,v1:25,v2:12},{p1:72,p2:28,v1:14,v2:7},
+  {p1:45,p2:55,v1:40,v2:20},{p1:62,p2:38,v1:16,v2:9},{p1:58,p2:42,v1:22,v2:14},
+  {p1:68,p2:32,v1:30,v2:18},{p1:77,p2:23,v1:13,v2:6},{p1:48,p2:52,v1:35,v2:25}
+];
+const EV_HARD = [
+  {p1:63,p2:37,v1:17,v2:11},{p1:57,p2:43,v1:23,v2:9},{p1:73,p2:27,v1:11,v2:14},
+  {p1:41,p2:59,v1:45,v2:22},{p1:66,p2:34,v1:19,v2:13},{p1:53,p2:47,v1:28,v2:17},
+  {p1:78,p2:22,v1:9,v2:16},{p1:44,p2:56,v1:38,v2:27},{p1:71,p2:29,v1:15,v2:12},
+  {p1:67,p2:33,v1:24,v2:8}
+];
+
+function genEV() {
+  let pool;
+  if (difficulty === 'easy') pool = EV_EASY;
+  else if (difficulty === 'medium') pool = [...EV_EASY,...EV_MED];
+  else pool = [...EV_MED,...EV_HARD];
+  const {p1,p2,v1,v2} = rItem(pool);
+  const ev = roundTo1((p1/100)*v1 - (p2/100)*v2);
+  return {
+    question: `${p1}%×${v1} − ${p2}%×${v2}`,
+    sub: 'Expected value (EV)',
+    answer: ev,
+    display: `${ev}`
+  };
+}
+
+// ── MODE 6: Weighted Averages ──
+const WA_EASY = [
+  {p1:80,p2:20,v1:100,v2:50},{p1:70,p2:30,v1:120,v2:60},{p1:60,p2:40,v1:200,v2:100},
+  {p1:75,p2:25,v1:80,v2:40},{p1:50,p2:50,v1:150,v2:90},{p1:90,p2:10,v1:100,v2:30}
+];
+const WA_MED = [
+  {p1:65,p2:35,v1:140,v2:80},{p1:55,p2:45,v1:180,v2:120},{p1:72,p2:28,v1:250,v2:100},
+  {p1:45,p2:55,v1:160,v2:80},{p1:62,p2:38,v1:300,v2:150},{p1:85,p2:15,v1:120,v2:40},
+  {p1:40,p2:60,v1:200,v2:50},{p1:77,p2:23,v1:90,v2:30}
+];
+const WA_HARD = [
+  {p1:63,p2:37,v1:170,v2:110},{p1:57,p2:43,v1:230,v2:130},{p1:73,p2:27,v1:280,v2:120},
+  {p1:41,p2:59,v1:350,v2:180},{p1:66,p2:34,v1:190,v2:70},{p1:53,p2:47,v1:240,v2:160},
+  {p1:78,p2:22,v1:110,v2:50},{p1:44,p2:56,v1:320,v2:220},{p1:71,p2:29,v1:150,v2:90}
+];
+
+function genWA() {
+  let pool;
+  if (difficulty === 'easy') pool = WA_EASY;
+  else if (difficulty === 'medium') pool = [...WA_EASY,...WA_MED];
+  else pool = [...WA_MED,...WA_HARD];
+  const {p1,p2,v1,v2} = rItem(pool);
+  const wa = roundTo1((p1/100)*v1 + (p2/100)*v2);
+  return {
+    question: `${p1}%×${v1} + ${p2}%×${v2}`,
+    sub: 'Weighted average (fair value)',
+    answer: wa,
+    display: `${wa}`
+  };
+}
+
+// ── MODE 7: Weird Division ──
+const DIV_DIVIDENDS_EASY = [50,75,90,100,120,150,175,200,225,250,300,350,400,450,500];
+const DIV_DIVIDENDS_MED = [63,84,105,126,147,168,189,210,231,252,273,315,336,357,378,420,441,462,483,525,546,567,630,672,735,756,840];
+const DIV_DIVIDENDS_HARD = [91,119,133,154,182,196,203,217,238,259,266,287,308,322,343,364,385,406,427,448,469,490,511,532,553,574,595,616,637,658,679,700,721,742,763,784,805,826,847,868,889];
+const DIV_DIVISORS_EASY = [4,5,8,10];
+const DIV_DIVISORS_MED = [6,7,8,9,12,15];
+const DIV_DIVISORS_HARD = [6,7,8,9,11,12,13,14,16,17,18,19];
+
+function genWeirdDiv() {
+  let dividends, divisors;
+  if (difficulty === 'easy') { dividends = DIV_DIVIDENDS_EASY; divisors = DIV_DIVISORS_EASY; }
+  else if (difficulty === 'medium') { dividends = [...DIV_DIVIDENDS_EASY,...DIV_DIVIDENDS_MED]; divisors = [...DIV_DIVISORS_EASY,...DIV_DIVISORS_MED]; }
+  else { dividends = [...DIV_DIVIDENDS_MED,...DIV_DIVIDENDS_HARD]; divisors = [...DIV_DIVISORS_MED,...DIV_DIVISORS_HARD]; }
+  const a = rItem(dividends);
+  const b = rItem(divisors);
+  const ans = roundTo1(a / b);
+  return {
+    question: `${a} ÷ ${b}`,
+    sub: '1 decimal place',
+    answer: ans,
+    display: `${ans}`
+  };
+}
+
+const GENERATORS = [genFraction,genPctToFrac,genDecMult,genPctArith,genRatio,genEV,genWA,genWeirdDiv];
+
+// ── Rounding helper ──
+function roundTo1(n) {
+  // If number ends in .25 or .75 (or .125, .625 etc), keep 2 dp
+  const r2 = Math.round(n * 100) / 100;
+  const frac = Math.round((r2 % 1) * 100);
+  if (frac === 25 || frac === 75 || frac === 125 || frac === 625 || frac === 875 || frac === 375) {
+    return r2;
+  }
+  return Math.round(n * 10) / 10;
+}
+
+// ── Answer checking ──
+function checkAnswer(userStr, correctAns, isFrac) {
+  const s = userStr.replace(',','.').trim();
+  if (!s) return false;
+  // Accept "n/d" format
+  if (s.includes('/')) {
+    const parts = s.split('/');
+    if (parts.length === 2) {
+      const n = parseFloat(parts[0]);
+      const d = parseFloat(parts[1]);
+      if (!isNaN(n) && !isNaN(d) && d !== 0) {
+        return Math.abs(n/d - correctAns) < 0.0051;
+      }
+    }
+    return false;
+  }
+  const u = parseFloat(s);
+  if (isNaN(u)) return false;
+  return Math.abs(u - correctAns) < 0.051;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SCREEN MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+  if (id === 'menu') {
+    updateStats();
+    if (gameActive) endGame(true);
+  }
+  if (id === 'mixed') buildMixed();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DIFFICULTY
+// ══════════════════════════════════════════════════════════════
+function setDiff(btn, d) {
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  difficulty = d;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  GAME
+// ══════════════════════════════════════════════════════════════
+function startGame(modeIdx) {
+  currentMode = modeIdx;
+  lastGameMode = modeIdx;
+  lastGameModes = null;
+  initGame();
+}
+
+function startMixedGame() {
+  if (mixSelected.length === 0) return;
+  currentMode = [...mixSelected];
+  lastGameMode = null;
+  lastGameModes = [...mixSelected];
+  initGame();
+}
+
+function initGame() {
+  score = 0;
+  questionsAsked = 0;
+  skipped = 0;
+  responseTimes = [];
+  answered = false;
+  shownAnswer = false;
+  timeLeft = 120;
+  gameActive = true;
+
+  document.getElementById('score-num').textContent = '0';
+  document.getElementById('timer-num').textContent = '2:00';
+  document.getElementById('timer-bar').style.width = '100%';
+  document.getElementById('timer-num').classList.remove('urgent');
+  document.getElementById('timer-bar').classList.remove('urgent');
+  document.getElementById('feedback-text').textContent = '';
+  document.getElementById('feedback-text').className = 'feedback-text';
+  document.getElementById('next-btn').style.display = 'none';
+
+  if (Array.isArray(currentMode)) {
+    document.getElementById('game-mode-tag').textContent = 'MIXED MODE';
+  } else {
+    document.getElementById('game-mode-tag').textContent = MODE_NAMES[currentMode];
+  }
+
+  showScreen('game');
+  nextQuestion();
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    const mins = Math.floor(timeLeft / 60);
+    const secs = timeLeft % 60;
+    document.getElementById('timer-num').textContent = `${mins}:${secs.toString().padStart(2,'0')}`;
+    const pct = (timeLeft / 120) * 100;
+    document.getElementById('timer-bar').style.width = pct + '%';
+    if (timeLeft <= 20) {
+      document.getElementById('timer-num').classList.add('urgent');
+      document.getElementById('timer-bar').classList.add('urgent');
+    }
+    if (timeLeft <= 0) endGame(false);
+  }, 1000);
+}
+
+function nextQuestion() {
+  answered = false;
+  shownAnswer = false;
+  questionStartTime = Date.now();
+  const inp = document.getElementById('answer-input');
+  inp.value = '';
+  inp.className = 'answer-input';
+  inp.focus();
+  document.getElementById('feedback-text').textContent = '';
+  document.getElementById('feedback-text').className = 'feedback-text';
+  document.getElementById('next-btn').style.display = 'none';
+
+  let modeIdx;
+  if (Array.isArray(currentMode)) {
+    modeIdx = rItem(currentMode);
+  } else {
+    modeIdx = currentMode;
+  }
+
+  currentQ = GENERATORS[modeIdx]();
+  currentQ.modeIdx = modeIdx;
+  questionsAsked++;
+
+  document.getElementById('question-text').textContent = currentQ.question;
+  document.getElementById('question-sub').textContent = currentQ.sub || '';
+  document.getElementById('q-counter').textContent = `Q${questionsAsked}  ·  ${currentQ.unit || ''}`;
+
+  // Swap numpad dot ↔ slash depending on mode
+  const dotBtn = document.getElementById('np-dot-btn');
+  if (dotBtn) dotBtn.textContent = currentQ.isFrac ? '/' : '.';
+}
+
+function handleInput() {
+  if (!gameActive || answered) return;
+  const inp = document.getElementById('answer-input');
+  const val = inp.value.trim();
+  if (!val) return;
+  // For fraction mode, don't auto-check until a "/" is present and both sides filled
+  if (currentQ && currentQ.isFrac) {
+    if (!val.includes('/')) return;
+    const parts = val.split('/');
+    if (parts.length !== 2 || !parts[0] || !parts[1]) return;
+  }
+  if (checkAnswer(val, currentQ.answer, currentQ && currentQ.isFrac)) submitAnswer();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter') submitAnswer();
+}
+
+function np(char) {
+  if (answered && !shownAnswer) return;
+  const inp = document.getElementById('answer-input');
+  if (char === '.') {
+    // In fraction mode the dot key becomes /
+    if (currentQ && currentQ.isFrac) {
+      if (inp.value.includes('/')) return; // only one slash
+      inp.value += '/';
+    } else {
+      if (inp.value.includes('.')) return;
+      inp.value += '.';
+    }
+  } else {
+    inp.value += char;
+  }
+  inp.focus();
+  handleInput();
+}
+
+function npDel() {
+  const inp = document.getElementById('answer-input');
+  inp.value = inp.value.slice(0, -1);
+  inp.focus();
+}
+
+function submitAnswer() {
+  if (!gameActive) return;
+  if (answered && shownAnswer) {
+    nextQuestion();
+    return;
+  }
+  const inp = document.getElementById('answer-input');
+  const val = inp.value.trim();
+  if (!val) return;
+
+  const correct = checkAnswer(val, currentQ.answer, currentQ && currentQ.isFrac);
+  const elapsed = (Date.now() - questionStartTime) / 1000;
+
+  if (correct) {
+    answered = true;
+    score++;
+    responseTimes.push(elapsed);
+    inp.className = 'answer-input correct';
+    setFeedback('✓ CORRECT', 'correct');
+    document.getElementById('score-num').textContent = score;
+    document.getElementById('score-num').parentElement.classList.add('pop');
+    setTimeout(() => document.getElementById('score-num').parentElement.classList.remove('pop'), 250);
+
+    // Update persistent stats
+    updatePersistentStats(currentQ.modeIdx, true, elapsed);
+
+    setTimeout(() => {
+      if (gameActive) nextQuestion();
+    }, 600);
+  } else {
+    inp.className = 'answer-input wrong';
+    setFeedback('✗ TRY AGAIN', 'wrong');
+    setTimeout(() => {
+      inp.value = '';
+      inp.className = 'answer-input';
+      setFeedback('', '');
+    }, 500);
+  }
+}
+
+function showAnswer() {
+  if (!gameActive) return;
+  shownAnswer = true;
+  answered = true;
+  skipped++;
+  const inp = document.getElementById('answer-input');
+  inp.value = String(currentQ.display);
+  inp.className = 'answer-input';
+  setFeedback(`Answer: ${currentQ.display}`, 'wrong');
+  document.getElementById('next-btn').style.display = 'block';
+  updatePersistentStats(currentQ.modeIdx, false, (Date.now() - questionStartTime)/1000);
+}
+
+function setFeedback(msg, cls) {
+  const el = document.getElementById('feedback-text');
+  el.textContent = msg;
+  el.className = 'feedback-text' + (cls ? ' ' + cls : '');
+}
+
+function confirmBack() {
+  if (gameActive) {
+    if (confirm('End current game?')) {
+      endGame(true);
+      showScreen('menu');
+    }
+  } else {
+    showScreen('menu');
+  }
+}
+
+function endGame(abort) {
+  clearInterval(timerInterval);
+  gameActive = false;
+  if (abort) return;
+
+  // Show results
+  const acc = questionsAsked > 0 ? Math.round((score / questionsAsked) * 100) : 0;
+  const avgTime = responseTimes.length > 0
+    ? (responseTimes.reduce((a,b)=>a+b,0) / responseTimes.length).toFixed(1)
+    : '—';
+  const bestTime = responseTimes.length > 0
+    ? Math.min(...responseTimes).toFixed(1)
+    : '—';
+
+  document.getElementById('res-score').innerHTML = `${score} <span>correct</span>`;
+  document.getElementById('res-meta').textContent =
+    `${questionsAsked} attempted · ${difficulty.toUpperCase()} · 2:00`;
+  document.getElementById('res-acc').textContent = acc + '%';
+  document.getElementById('res-avg').textContent = avgTime !== '—' ? avgTime + 's' : '—';
+  document.getElementById('res-skipped').textContent = skipped;
+  document.getElementById('res-best').textContent = bestTime !== '—' ? bestTime + 's' : '—';
+
+  buildBreakdown();
+  showScreen('results');
+}
+
+function buildBreakdown() {
+  const stats = allStats.byMode;
+  const el = document.getElementById('res-breakdown');
+  const modes = Array.isArray(currentMode) ? currentMode : [currentMode];
+  let html = '<div class="results-breakdown-title">CATEGORY BREAKDOWN (ALL TIME)</div>';
+  modes.forEach(m => {
+    const s = stats[m] || {correct:0,total:0};
+    const pct = s.total > 0 ? Math.round(s.correct/s.total*100) : 0;
+    const color = pct >= 80 ? '#00d084' : pct >= 60 ? '#f5a623' : '#ff4757';
+    html += `<div class="breakdown-row">
+      <div class="breakdown-name">${MODE_NAMES[m]}</div>
+      <div class="breakdown-bar-bg"><div class="breakdown-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+      <div class="breakdown-pct">${pct}%</div>
+    </div>`;
+  });
+  el.innerHTML = html;
+}
+
+function playAgain() {
+  if (lastGameModes) {
+    currentMode = [...lastGameModes];
+  } else if (lastGameMode !== null) {
+    currentMode = lastGameMode;
+  }
+  initGame();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PERSISTENT STATS
+// ══════════════════════════════════════════════════════════════
+function updatePersistentStats(modeIdx, correct, time) {
+  allStats.total++;
+  if (correct) allStats.correct++;
+  allStats.totalTime += time;
+  if (!allStats.byMode[modeIdx]) allStats.byMode[modeIdx] = {correct:0,total:0,totalTime:0};
+  allStats.byMode[modeIdx].total++;
+  if (correct) allStats.byMode[modeIdx].correct++;
+  allStats.byMode[modeIdx].totalTime += time;
+  try { localStorage.setItem('sig_stats', JSON.stringify(allStats)); } catch(e) {}
+}
+
+function updateStats() {
+  const s = allStats;
+  if (s.total === 0) {
+    document.getElementById('stats-section').style.display = 'none';
+    return;
+  }
+  document.getElementById('stats-section').style.display = 'block';
+  document.getElementById('stat-total').textContent = s.total;
+  document.getElementById('stat-acc').textContent =
+    Math.round(s.correct/s.total*100) + '%';
+  document.getElementById('stat-avg').textContent =
+    (s.totalTime/s.total).toFixed(1) + 's';
+
+  // Weakest
+  const modes = Object.keys(s.byMode).map(k => ({
+    idx: parseInt(k),
+    name: MODE_NAMES[parseInt(k)],
+    pct: s.byMode[k].total > 0 ? Math.round(s.byMode[k].correct/s.byMode[k].total*100) : 100,
+    total: s.byMode[k].total
+  })).filter(m => m.total >= 3).sort((a,b) => a.pct - b.pct).slice(0,4);
+
+  const wr = document.getElementById('weak-rows');
+  if (modes.length === 0) {
+    document.querySelector('.weak-section').style.display = 'none';
+    return;
+  }
+  document.querySelector('.weak-section').style.display = 'block';
+  wr.innerHTML = modes.map(m => {
+    const color = m.pct >= 80 ? '#00d084' : m.pct >= 60 ? '#f5a623' : '#ff4757';
+    return `<div class="weak-row">
+      <div class="weak-name">${m.name}</div>
+      <div class="weak-bar-bg"><div class="weak-bar-fill" style="width:${m.pct}%;background:${color}"></div></div>
+      <div class="weak-pct">${m.pct}%</div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
+buildMenu();
+updateStats();
+
+// Allow submit via input when numeric keyboard shows "Go/Done"
+document.getElementById('answer-input').addEventListener('keyup', e => {
+  if (e.key === 'Enter') submitAnswer();
+});
+
+// Custom numpad submit
+const npSubmit = document.createElement('button');
+npSubmit.className = 'np-btn submit-np';
+npSubmit.innerHTML = '↵';
+npSubmit.style.gridColumn = 'span 3';
+npSubmit.onclick = submitAnswer;
+document.getElementById('numpad').appendChild(npSubmit);
+</script>
+</body>
+</html>
